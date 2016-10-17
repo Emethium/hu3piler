@@ -1,8 +1,28 @@
 /**
  * JavaCC template file created by SF JavaCC plugin 1.5.28+ wizard for JavaCC 1.5.0+
- */options{  static = true;}PARSER_BEGIN(Hu3Grammar)package br.com.hu3piler;
+ */options{  static = true;
+  DEBUG_PARSER = false;
+  DEBUG_TOKEN_MANAGER = false;}PARSER_BEGIN(Hu3Grammar)package br.com.hu3piler;
 
-public class Hu3Grammar{  public static void main(String args []) throws ParseException  {    Hu3Grammar parser = new Hu3Grammar(System.in);    while (true)    {      System.out.println("Reading from standard input...");      System.out.print("Enter an expression like \"1+(2+3)*4;\" :");      try      {        switch (Hu3Grammar.one_line())        {          case 0 :           System.out.println("OK.");          break;          case 1 :           System.out.println("Goodbye.");          break;          default :           break;        }      }      catch (Exception e)      {        System.out.println("NOK.");        System.out.println(e.getMessage());        Hu3Grammar.ReInit(System.in);      }      catch (Error e)      {        System.out.println("Oops.");        System.out.println(e.getMessage());        break;      }    }  }}PARSER_END(Hu3Grammar)SKIP :{  " "| "\r"| "\t"| "\n"}
+public class Hu3Grammar{  public static void main(String args []) throws ParseException  {    Hu3Grammar parser = new Hu3Grammar(System.in);    while (true)    {      System.out.println("Reading from standard input...");      System.out.print("Enter an expression like \"1+(2+3)*4;\" :");      try      {        switch (Hu3Grammar.one_line())        {          case 0 :           System.out.println("OK.");          break;          case 1 :           System.out.println("Goodbye.");          break;          default :           break;        }      }      catch (Exception e)      {        System.out.println("NOK.");        System.out.println(e.getMessage());        Hu3Grammar.ReInit(System.in);      }      catch (Error e)      {        System.out.println("Oops.");        System.out.println(e.getMessage());        break;      }    }  }}/*
+* syncroKind represents the kind for the compilers' resync,
+* returning the last token before the last sync.
+*/
+
+static public void sintaticError(String expected, int synchroKind) {
+        Token t = getToken(1);
+        System.out.print("\n++ Sintatic error (line "+t.beginLine);
+        System.out.println(", column "+t.beginColumn+") ++");
+        System.out.print("Found \'"+t.image+"\'. ");
+        System.out.println("Expected: " + expected);
+        if (t.kind != synchroKind) {
+            // Kind 0 represents <EOF>
+            while(t.kind!=kindSincronizacao && t.kind != 0) {
+                t = getNextToken();
+            }
+        }
+}
+    PARSER_END(Hu3Grammar)SKIP :{  " "| "\r"| "\t"| "\n"}
 SKIP : { "/*" : multiLineComment }
 
 <multiLineComment>
@@ -21,28 +41,16 @@ TOKEN :
     |   < STRING : ("\"")(~["\""])*("\"") >
     |   < VAR : ("_")(["a"-"z"]|["A"-"Z"])(["a"-"z"]|["A"-"Z"]|["0"-"9"])* >
     |   < ATRIB : "=" >
-    |   < SHOW : "exibe" >
-    |   < READ : "leia" >
-    |   < TYPENUM : "numero" >
-    |   < TYPESTRING : "string" >
     |   < PARL : "(" >
     |   < PARR : ")" >
-    |   < POT : "^" >
-    |   < MUL : "*" >
-    |   < DIV : "/" >
-    |   < ADD : "+" >
-    |   < SUB : "-" >
-    |   < BIGGER : ">" >
-    |   < LESS : "<" >
-    |   < BIGEQUAL : ">=" >
-    |   < LESSEQUAL : "<=" >
-    |   < DIFFERENT : "!=" >
-    |   < COMPARE : "==" >
-    |   < AND : "e" >
-    |   < OR : "ou" >
-    |   < NOT : "nao" >
-    |   < SPECIALOR : "OU" >
-    |   < IF : "se" >
+    |   < DOTCOMMA : ";" >
+    |   < COMMA : "," >
+}
+
+// Function operators
+TOKEN :
+{
+	   	< IF : "se" >
     |   < ELSIF : "senaoSe" >
     |   < ELSE : "senao" >
     |   < ENDIF : "fimSe" >
@@ -56,6 +64,91 @@ TOKEN :
     |   < UNTIL : "ate" >
     |   < MOVE : "passo" >
     |   < ENDFOR : "fimPara" >
-    |   < DOTCOMMA : ";" >
-    |   < COMMA : "," >
-}TOKEN :{  < CONSTANT : (< DIGIT >)+ >| < #DIGIT : [ "0"-"9" ] >}int one_line() :{}{  sum() ";"  {    return 0;  }| ";"  {    return 1;  }}void sum() :{}{  term()  (    (      < PLUS >    | < MINUS >    )    term()  )*}void term() :{}{  unary()  (    (      < MULTIPLY >    | < DIVIDE >    )    unary()  )*}void unary() :{}{  < MINUS > element()| element()}void element() :{}{  < CONSTANT >| "(" sum() ")"}
+}
+
+// Variable types
+TOKEN :
+{
+  	   < TYPENUM : "numero" >
+    |   < TYPESTRING : "string" >}
+// Arithmetic operators
+TOKEN : 
+{
+     	< POT : "^" >
+    |   < MUL : "*" >
+    |   < DIV : "/" >
+    |   < ADD : "+" >
+    |   < SUB : "-" >}// Logic operators
+TOKEN :
+{
+  	   < AND : "e" >
+    |   < OR : "ou" >
+    |   < NOT : "nao" >
+    |   < SPECIALOR : "OU" >}
+
+// Relativity tokens
+TOKEN :
+{
+     	< BIGGER : ">" >
+    |   < LESS : "<" >
+    |   < BIGEQUAL : ">=" >
+    |   < LESSEQUAL : "<=" >
+    |   < DIFFERENT : "!=" >
+    |   < COMPARE : "==" >}
+
+// Language built-in functions
+TOKEN :
+{
+  	   < SHOW : "exibe" >
+    |   < READ : "leia" >}
+void start(): { }
+{
+  readCommandList() <EOF>}
+CommandList readCommandList(): {CommandList cl = null;}
+{
+  (readCommand())*  {
+    return cl;
+  } 
+}
+
+void readCommand(): {}
+{
+  		atribution()
+    |   declaration()
+    |   read()
+    |   show()
+    |   ifCommand()
+    |   switchCommand()
+    |   whileCommand()
+    |   forCommand()
+}
+
+Expression semanticAnalizer(): {Expression expression = new Expression(); Item item = null; Token token = null; }
+{
+  
+}
+
+void checkAnd(Expression expression): {Token token = null; Item item = null;}
+{
+	
+}
+
+void checkComparation(Expression expression): {Token token = null; Item item = null;}
+{
+}
+
+void checkArithmetic(Expression expression): {Token token = null; Item item = null;}
+{
+}
+
+void checkMulOrDiv(Expression expression): {Token token = null; Item item = null;}
+{
+}
+
+void checkPow(Expression expression): {Token token = null; Item item = null;}
+{
+}
+
+void checkNot(Expression expression): {Token token = null; Item item = null;}
+{
+}
