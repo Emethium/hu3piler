@@ -82,7 +82,7 @@ TOKEN : {
     |   < TYPESTRING : "string" >}
 // Arithmetic operators
 TOKEN : {
-     	< POT : "^" >
+     	< POW : "^" >
     |   < MUL : "*" >
     |   < DIV : "/" >
     |   < ADD : "+" >
@@ -106,17 +106,18 @@ TOKEN : {
 TOKEN : {
   	   < SHOW : "exibe" >
     |   < READ : "leia" >}
-void start(): { }
+void start(): { CommandList cl;}
 {
-  readCommandList() <EOF>}
-CommandList readCommandList(): {CommandList cl = null;}
+  cl = readCommandList() <EOF>
+  {return cl;}}
+CommandList readCommandList(): {CommandList cl = new CommandList();}
 {
-  (readCommand())*  {
+  (readCommand(cl))*  {
     return cl;
   } 
 }
 
-void readCommand(): {}
+void readCommand(CommandList cl): {CommandList auxList; Command command}
 {
   		atribution()
     |   declaration()
@@ -137,12 +138,14 @@ Expression semanticAnalizer(): {Expression expression = new Expression(); Item i
 	 */
 	checkAnd(expression)
 	(	  token = < OR >
-	  checkAnd(expression) {
+	  checkAnd(expression)
+	  {
 		item = new Item(Type.OPERATOR, token.image)
 		expression.addItem(item);
 	  }
 	| token = < SPECIALOR >
-	 checkAnd(expression) {
+	 checkAnd(expression)
+	 {
 		item = new Item(Type.OPERATOR, token.image)
 		expression.addItem(item);
 	  }
@@ -163,7 +166,8 @@ void checkAnd(Expression expression): {Token token = null; Item item = null;}
 	checkComparation(expression)
 	(
         token = < AND >
-        checkComparation(expression) {
+        checkComparation(expression)
+        {
             item = new Item(Type.OPERATOR, token.image);
             expression.addItem(item);
         }
@@ -176,37 +180,43 @@ void checkComparation(Expression expression): {Token token = null; Item item = n
   (
     token = < BIGGER >
     { expression.setDataType(Type.NUMBER)}
-    checkArithmetic(expression) {
+    checkArithmetic(expression)
+    {
 		item = new Item(Type.OPERATOR, token.image);
         expression.addItem(item);
     }
   | token = < LESS >
     { expression.setDataType(Type.NUMBER)}
-    checkArithmetic(expression) {
+    checkArithmetic(expression)
+    {
 		item = new Item(Type.OPERATOR, token.image);
         expression.addItem(item);
     }
   | token = < BIGEQUAL >
   	{ expression.setDataType(Type.NUMBER)}
-    checkArithmetic(expression) {
+    checkArithmetic(expression)
+    {
 		item = new Item(Type.OPERATOR, token.image);
         expression.addItem(item);
     }
   | token = < LESSEQUAL >
   	{ expression.setDataType(Type.NUMBER)}
-    checkArithmetic(expression) {
+    checkArithmetic(expression)
+    {
 		item = new Item(Type.OPERATOR, token.image);
         expression.addItem(item);
     }
  | token = < DIFFERENT >
  	{ expression.setDataType(Type.NUMBER)}
-    checkArithmetic(expression) {
+    checkArithmetic(expression)
+	{
 		item = new Item(Type.OPERATOR, token.image);
         expression.addItem(item);
     }
  | token = < COMPARE >
  	{ expression.setDataType(Type.NUMBER)}
-    checkArithmetic(expression) {
+    checkArithmetic(expression)
+    {
 		item = new Item(Type.OPERATOR, token.image);
         expression.addItem(item);
     }  
@@ -218,12 +228,14 @@ void checkArithmetic(Expression expression): {Token token = null; Item item = nu
   checkMulOrDiv(expression)
   (
     token = < ADD >
-	checkMulOrDiv(expression) {
+	checkMulOrDiv(expression)
+	{
 		item = new Item(Type.OPERATOR, token.image);
         expression.addItem(item);
 	}
 	|token = < SUB >
-	checkMulOrDiv(expression) {
+	checkMulOrDiv(expression)
+	{
 		item = new Item(Type.OPERATOR, token.image);
         expression.addItem(item);
 	}        )*
@@ -231,12 +243,41 @@ void checkArithmetic(Expression expression): {Token token = null; Item item = nu
 
 void checkMulOrDiv(Expression expression): {Token token = null; Item item = null;}
 {
+  checkPow(expression)
+  (
+    token = < MUL >
+    checkPow(expression)
+    {
+		item = new Item(Type.OPERATOR, token.image);
+        expression.addItem(item);
+    }
+  | token = < DIV >
+  	checkPow(expression)
+  	{
+		item = new Item(Type.OPERATOR, token.image);
+        expression.addItem(item);
+  	}   )*
 }
 
 void checkPow(Expression expression): {Token token = null; Item item = null;}
 {
+  checkNot(expression)
+  (
+    token = < POW >
+    checkNot(expression)
+    {
+		item = new Item(Type.OPERATOR, token.image);
+        expression.addItem(item);
+    }
+  )?  
 }
 
 void checkNot(Expression expression): {Token token = null; Item item = null;}
 {
+  (
+    token = < NOT >
+    {
+      item = new Item(Type.OPERATOR, token.image);
+      expression.addItem(item);
+    }  )*
 }
