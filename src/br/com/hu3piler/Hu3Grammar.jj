@@ -5,9 +5,9 @@
   DEBUG_TOKEN_MANAGER = false;}PARSER_BEGIN(Hu3Grammar)package br.com.hu3piler;
 
 public class Hu3Grammar{  public static void main(String args []) throws ParseException  {    Hu3Grammar parser = new Hu3Grammar(System.in);    while (true)    {      System.out.println("Reading from standard input...");      System.out.print("Enter an expression like \"1+(2+3)*4;\" :");      try      {        switch (Hu3Grammar.one_line())        {          case 0 :           System.out.println("OK.");          break;          case 1 :           System.out.println("Goodbye.");          break;          default :           break;        }      }      catch (Exception e)      {        System.out.println("NOK.");        System.out.println(e.getMessage());        Hu3Grammar.ReInit(System.in);      }      catch (Error e)      {        System.out.println("Oops.");        System.out.println(e.getMessage());        break;      }    }  }}/*
-* syncroKind represents the kind for the compilers' resync,
-* returning the last token before the last sync.
-*/
+ * The syncroKind argument represents the kind for the compilers' resync,
+ * returning the last token before the last sync.
+ */
 
 static public void sintaticError(String expected, int synchroKind) {
         Token t = getToken(1);
@@ -22,7 +22,19 @@ static public void sintaticError(String expected, int synchroKind) {
             }
         }
 }
-    PARSER_END(Hu3Grammar)SKIP :{  " "| "\r"| "\t"| "\n"}
+
+static public void semanticError(String s) {
+
+}
+
+static public void lexicError(String s) {
+
+}
+
+static public void warning(String s) {
+
+}
+    PARSER_END(Hu3Grammar)SKIP : {  " "| "\r"| "\t"| "\n"}
 SKIP : { "/*" : multiLineComment }
 
 <multiLineComment>
@@ -35,8 +47,7 @@ SKIP : { "//" : lineComment }
 
 SKIP: { "\n" : DEFAULT | <~[]> }
 
-TOKEN :
-{
+TOKEN : {
         < NUMBER : (["0" - "9"])*(".")?(["0" - "9"])+ > 
     |   < STRING : ("\"")(~["\""])*("\"") >
     |   < VAR : ("_")(["a"-"z"]|["A"-"Z"])(["a"-"z"]|["A"-"Z"]|["0"-"9"])* >
@@ -48,8 +59,7 @@ TOKEN :
 }
 
 // Function operators
-TOKEN :
-{
+TOKEN : {
 	   	< IF : "se" >
     |   < ELSIF : "senaoSe" >
     |   < ELSE : "senao" >
@@ -67,28 +77,24 @@ TOKEN :
 }
 
 // Variable types
-TOKEN :
-{
+TOKEN : {
   	   < TYPENUM : "numero" >
     |   < TYPESTRING : "string" >}
 // Arithmetic operators
-TOKEN : 
-{
+TOKEN : {
      	< POT : "^" >
     |   < MUL : "*" >
     |   < DIV : "/" >
     |   < ADD : "+" >
     |   < SUB : "-" >}// Logic operators
-TOKEN :
-{
+TOKEN : {
   	   < AND : "e" >
     |   < OR : "ou" >
     |   < NOT : "nao" >
     |   < SPECIALOR : "OU" >}
 
-// Relativity tokens
-TOKEN :
-{
+// Comparation tokens
+TOKEN : {
      	< BIGGER : ">" >
     |   < LESS : "<" >
     |   < BIGEQUAL : ">=" >
@@ -97,8 +103,7 @@ TOKEN :
     |   < COMPARE : "==" >}
 
 // Language built-in functions
-TOKEN :
-{
+TOKEN : {
   	   < SHOW : "exibe" >
     |   < READ : "leia" >}
 void start(): { }
@@ -125,20 +130,103 @@ void readCommand(): {}
 
 Expression semanticAnalizer(): {Expression expression = new Expression(); Item item = null; Token token = null; }
 {
-  
+	/*
+	 * First of all we need to evaluate the all the tokens regarding their precedence.
+	 * So as you can see each function will call the function that deals with the token 
+	 * with the most precedence so the last one listed below is actually the first one evaluated.
+	 */
+	checkAnd(expression)
+	(	  token = < OR >
+	  checkAnd(expression) {
+		item = new Item(Type.OPERATOR, token.image)
+		expression.addItem(item);
+	  }
+	| token = < SPECIALOR >
+	 checkAnd(expression) {
+		item = new Item(Type.OPERATOR, token.image)
+		expression.addItem(item);
+	  }
+	)* // Which means our token can appear none or more times
+
+
+	/*
+	 * Since all the functions will be called recursively, from this point onwards,
+	 * the semantic analysis will be performed.
+	 */
+
+
+	
 }
 
 void checkAnd(Expression expression): {Token token = null; Item item = null;}
 {
-	
+	checkComparation(expression)
+	(
+        token = < AND >
+        checkComparation(expression) {
+            item = new Item(Type.OPERATOR, token.image);
+            expression.addItem(item);
+        }
+    )*	
 }
 
 void checkComparation(Expression expression): {Token token = null; Item item = null;}
 {
+  checkArithmetic(expression)
+  (
+    token = < BIGGER >
+    { expression.setDataType(Type.NUMBER)}
+    checkArithmetic(expression) {
+		item = new Item(Type.OPERATOR, token.image);
+        expression.addItem(item);
+    }
+  | token = < LESS >
+    { expression.setDataType(Type.NUMBER)}
+    checkArithmetic(expression) {
+		item = new Item(Type.OPERATOR, token.image);
+        expression.addItem(item);
+    }
+  | token = < BIGEQUAL >
+  	{ expression.setDataType(Type.NUMBER)}
+    checkArithmetic(expression) {
+		item = new Item(Type.OPERATOR, token.image);
+        expression.addItem(item);
+    }
+  | token = < LESSEQUAL >
+  	{ expression.setDataType(Type.NUMBER)}
+    checkArithmetic(expression) {
+		item = new Item(Type.OPERATOR, token.image);
+        expression.addItem(item);
+    }
+ | token = < DIFFERENT >
+ 	{ expression.setDataType(Type.NUMBER)}
+    checkArithmetic(expression) {
+		item = new Item(Type.OPERATOR, token.image);
+        expression.addItem(item);
+    }
+ | token = < COMPARE >
+ 	{ expression.setDataType(Type.NUMBER)}
+    checkArithmetic(expression) {
+		item = new Item(Type.OPERATOR, token.image);
+        expression.addItem(item);
+    }  
+    )*
 }
 
 void checkArithmetic(Expression expression): {Token token = null; Item item = null;}
 {
+  checkMulOrDiv(expression)
+  (
+    token = < ADD >
+	checkMulOrDiv(expression) {
+		item = new Item(Type.OPERATOR, token.image);
+        expression.addItem(item);
+	}
+	|token = < SUB >
+	checkMulOrDiv(expression) {
+		item = new Item(Type.OPERATOR, token.image);
+        expression.addItem(item);
+	}        )*
 }
 
 void checkMulOrDiv(Expression expression): {Token token = null; Item item = null;}
