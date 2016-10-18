@@ -280,4 +280,61 @@ void checkNot(Expression expression): {Token token = null; Item item = null;}
       item = new Item(Type.OPERATOR, token.image);
       expression.addItem(item);
     }  )*
+  checkLastElement(expression)
+}
+
+/*
+ * Here we'll evaluate the last expression item, whateaver it  is.
+ */
+void checkLastElement(Expression expression) {Token token = null; Token secondToken = null; Item item = null;}
+{
+  ( < ADD > | < SUB >)?
+  t = < NUMBER >
+  {	if (secondToken != null) { 
+        item = new Item(Type.NUMBER, String.valueOf(Float.parseFloat(token.image)*-1));
+	} else { 
+        item = new Item( Tipo.NUMBER, token.image );
+    }
+    expression.addItem(item);
+
+    if (expression.getDataType() == null) { 
+      expression.setDataType(Type.NUMBER);
+    }
+    
+  }
+
+  | t = < STRING >
+  {
+    expression.addItem(new Item(Type.STRING, token.image));   
+    if (expression.getDataType() == null) { 
+            expression.setDataType(Type.STRING);
+    }
+  }
+
+  | t = < VAR >
+  {
+    expression.addItem(new Item(Type.VARIABLE, token.image));
+
+    if(!record.exists(token.image)) {
+		semanticError("Variable" + token.image + " not initialized!");
+    } else {
+		if (expression.getDataType() == null) { 
+            expression.setDataType(record.getSymbolType() == 'n'? Type.NUMBER : Type.STRING);
+    	}
+    	record.setUsed(token.image);
+    }
+  }
+
+  | t = < PARL >
+  {
+    auxiliarExpression(expression)
+    try
+    {
+    } catch(ParseException e) {
+        sintaticError("Close parentheses",PTVIRG);
+    }
+  }  
+  
+  
+  }          
 }
