@@ -3,65 +3,66 @@ Compiler for my Compilers' class experimental language.
 
 # Language definition:
 
-## 1. Tipos de variáveis
-### 1.1. Numérico
-Todo número representado nesta linguagem é um **número real** (ponto flutuante).
+## 1. Variable types
+### 1.1. Number
+Every number in hu3lang is a 64-bit float, called by using the private word `numero`.
 
-A palavra reservada para declarar uma variável do tipo numérico é `numero`.
 ### 1.2. String
-O tipo string é uma sequência de caracteres de qualquer tamanho que esteja delimitado pelo caractere _aspas duplas_.
+The String type is a regular character sequence of any length that is delimited by the _double quote_ token.
+Simple as it may be, it's private word is `string`.
 
-A palavra reservada para declarar uma variável do tipo string é `string`.
-## 2. Nomes de variáveis
-Os nomes das variáveis declaradas ou utilizadas em _qualquer_ parte do código, são iniciadas por "\_" (underline) seguido de letras e números. O _segundo caractere_ (primeiro caractere após o "\_") é **obrigatoriamente** uma letra. O tamanho dos nomes das variáveis devem ser _maior ou igual à 2_.
+## 2. Variable naming
+The variable names can be declared and used everywhere inside the code. They should always be initialized by
+an underscore ("\_") followed by a sequence of letters and/or numbers. Following the underscore a letter should be used as a general rule, so that any name should contain at least two characters.
 
-Exemplo:  
-`_var`, `_idade`, `_a1cad` e `_b`.
-## 3. Declaração de variáveis
-As declarações de variáveis podem ser feitas em qualquer parte, estrutura, do código. Declarações de variáveis são terminadas pelo caractere `;` (ponto e vírgula).
+Examples:  
+`_hear`, `_children`, `_alcohol` and `_kills`.
+## 3. Variable declaration
+Variables can be declarated at any code part or structure. Declaration should always be terminated by the use of
+the `;` character.
 
-Exemplos de declaração:
+Examples:
 
     numero _a, _b;  
     numero _var;
-    string _nome, _sobrenome, _b2;
-    string _ab;
-## 4. Atribuição
-A atribuição de _números_, _strings_ e _expressões_ à variáveis, são feitas pelo caractere `=`. O comando de atribuição será terminado pelo caractere `;` (ponto e vírgula).
+    string _name, _surname;
+    string _onii-chan;
 
-Exemplo:
+## 4. Assignment
+The string, number end expression assignment are done by the use of the `=` character. The asignment command shall be terminated with the `;` character.
 
-    _idade = 18;
-    _nome = "Joao";
-Há um caso especial na atribuição onde pode-se colocar várias variáveis no lado esquerdo do caractere de atribuição e do lado direito a lista de expressões nas quais serão atribuídas as suas respectivas variáveis.
+Example:
 
-Exemplo:
+    _please = 0;
+    _thisHurtsMyEgo = "Deal with it.";
 
-    _a, _b = 2, _x+1;
-Este exemplo, é equivalente a: `_a = 2; _b = _x+1`.
+There is a special case inside atribution where many variables can be written on the assignment's left and tight side
+in addition of the expression list right side:
 
->Obs.: Não é possível fazer a atribuição junto com declaração de variável.
+  `_a, _b = 2, _x+1;`
 
-## 5. Comando de exibição de dados
-O comando para a exibição de dados é feito através da palavra-chave `exibe`. O comando de exibição de dados é terminado pelo caractere `;` (ponto e vírgula).  
+Which is equivalent to: `_a = 2; _b = _x+1`.  
 
-Este comando mistura _variáveis_ e _strings_. Não é aceito _expressões_.
+>PS: It's not possible to make a variable assignment inside the declaration.
 
-Exemplo:
+## 5. Data exhibition command
+Data can be shown with the use of the command `exibe`. The command, as always, is terminated by the `;` character
+and accepts multiple arguments.
+
+Examples:
 
     exibe _a;
     exibe _a, _b, _id;
-    exibe "saldo: ", _a, ". \n++ Fim ++";
+    exibe "I am ", _a, "the bone of my sword";
 
-## 6. Comando de entrada de dados
-O comando para a entrada de dados é feito através da palavra-chave `leia`. O comando de entrada de dados é terminado pelo caractere `;` (ponto e vírgula).  
+## 6. Data input command
+Data input can be executed by the use of the ´leia´ command. The command, as always, is terminated by the `;` character
+and accepts multiple arguments.
 
-Este comando mistura _variáveis_, nas quais irão armazenar o valor informado pelo usuário, e _mensagens de texto_ para a devida informação sobre a entrada.
-
-Exemplo:
+Examples:
 
     leia _a, _b, _x;
-    leia "Digite o seu nome: ", _nome, "\nDigite sua idade: ", _idade;
+    leia "Input something here: ", _a, "\nAnd now here, you baka: ", _b;
 
 ## 7. Expressões
 _Expressões_ são caracterizadas pelo uso de _operadores_, pelos tipos dos _operandos_ e pelos tipos de resultados que produzem. _Operadores_ designam o tipo de operação a ser realizada.  
@@ -155,7 +156,7 @@ Para esta estrutura de controle, o `para` e o `fimPara` são **obrigatórios** p
 
 >OBS.: Não há qualquer caractere, como o `;` (ponto e vírgula), dizendo o fim do comando `para` e `fimPara`, como por exemplo para o comando `exibe`, e nem dentro dos parênteses delimitadores.
 
-#### 10.3.3. para múltiplo 
+#### 10.3.3. para múltiplo
     para ( _i, _j, _k expressaoInicio ate expressaoFim )
       (Bloco de comandos)
     fimPara

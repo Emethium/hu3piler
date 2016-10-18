@@ -284,7 +284,7 @@ void checkNot(Expression expression): {Token token = null; Item item = null;}
 }
 
 /*
- * Here we'll evaluate the last expression item, whateaver it  is.
+ * Here we'll evaluate the last expression item, whatever it  is.
  */
 void checkLastElement(Expression expression) {Token token = null; Token secondToken = null; Item item = null;}
 {
@@ -333,8 +333,7 @@ void checkLastElement(Expression expression) {Token token = null; Token secondTo
     } catch(ParseException e) {
         sintaticError("Close parentheses",PTVIRG);
     }
-  }  
-  
-  
+  }
+    
   }          
 }
