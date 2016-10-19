@@ -1,39 +1,45 @@
 /**
  * JavaCC template file created by SF JavaCC plugin 1.5.28+ wizard for JavaCC 1.5.0+
- */options{  static = true;
+ */options{
   DEBUG_PARSER = false;
   DEBUG_TOKEN_MANAGER = false;}PARSER_BEGIN(Hu3Grammar)package br.com.hu3piler;
 
-public class Hu3Grammar{  public static void main(String args []) throws ParseException  {    Hu3Grammar parser = new Hu3Grammar(System.in);    while (true)    {      System.out.println("Reading from standard input...");      System.out.print("Enter an expression like \"1+(2+3)*4;\" :");      try      {        switch (Hu3Grammar.one_line())        {          case 0 :           System.out.println("OK.");          break;          case 1 :           System.out.println("Goodbye.");          break;          default :           break;        }      }      catch (Exception e)      {        System.out.println("NOK.");        System.out.println(e.getMessage());        Hu3Grammar.ReInit(System.in);      }      catch (Error e)      {        System.out.println("Oops.");        System.out.println(e.getMessage());        break;      }    }  }}/*
- * The syncroKind argument represents the kind for the compilers' resync,
- * returning the last token before the last sync.
- */
+public class Hu3Grammar{  public static void main(String args []) throws ParseException  {    Hu3Grammar parser = new Hu3Grammar(System.in);    while (true)    {      System.out.println("Reading from standard input...");      System.out.print("Enter an expression like \"1+(2+3)*4;\" :");      try      {        switch (Hu3Grammar.one_line())        {          case 0 :           System.out.println("OK.");          break;          case 1 :           System.out.println("Goodbye.");          break;          default :           break;        }      }      catch (Exception e)      {        System.out.println("NOK.");        System.out.println(e.getMessage());        Hu3Grammar.ReInit(System.in);      }      catch (Error e)      {        System.out.println("Oops.");        System.out.println(e.getMessage());        break;      }    }  }	/*
+	 * The syncroKind argument represents the kind for the compilers' resync,
+	 * returning the last token before the last sync.
+	 */
+	
+	static public void sintaticError(String expected, int synchroKind) {
+	        Token t = getToken(1);
+	        System.out.print("\n++ Sintatic error (line "+t.beginLine);
+	        System.out.println(", column "+t.beginColumn+") ++");
+	        System.out.print("Found \'"+t.image+"\'. ");
+	        System.out.println("Expected: " + expected);
+	        if (t.kind != synchroKind) {
+	            // Kind 0 represents <EOF>
+	            while(t.kind!=kindSincronizacao && t.kind != 0) {
+	                t = getNextToken();
+	            }
+	        }
+	}
+	
+	static public void semanticError(String s)
+	{
+	
+	}
+	
+	static public void lexicError(String s)
+	{
+	
+	}
+	
+	static public void warning(String s)
+	{
+	
+	}
 
-static public void sintaticError(String expected, int synchroKind) {
-        Token t = getToken(1);
-        System.out.print("\n++ Sintatic error (line "+t.beginLine);
-        System.out.println(", column "+t.beginColumn+") ++");
-        System.out.print("Found \'"+t.image+"\'. ");
-        System.out.println("Expected: " + expected);
-        if (t.kind != synchroKind) {
-            // Kind 0 represents <EOF>
-            while(t.kind!=kindSincronizacao && t.kind != 0) {
-                t = getNextToken();
-            }
-        }
 }
 
-static public void semanticError(String s) {
-
-}
-
-static public void lexicError(String s) {
-
-}
-
-static public void warning(String s) {
-
-}
     PARSER_END(Hu3Grammar)SKIP : {  " "| "\r"| "\t"| "\n"}
 SKIP : { "/*" : multiLineComment }
 
@@ -117,16 +123,30 @@ CommandList readCommandList(): {CommandList cl = new CommandList();}
   } 
 }
 
-void readCommand(CommandList cl): {CommandList auxList; Command command}
+void readCommand(CommandList cl): {CommandList newCl; Command command}
 {
-  		atribution()
+  		newCl = atribution()
+  		{cl.insert(newCl}
+  		
     |   declaration()
-    |   read()
-    |   show()
-    |   ifCommand()
-    |   switchCommand()
-    |   whileCommand()
-    |   forCommand()
+
+    |   newCl = read()
+		{cl.insert(newCl}
+		
+    |   newCl = show()
+    	{cl.insert(newCl}
+    	
+    |   newCl = ifCommand()
+    	{cl.insert(command)}
+    	
+    |   newCl = switchCommand()
+    	{cl.insert(command}
+    	
+    |   newCl = whileCommand()
+    	{cl.insert(command}
+    	
+    |   newCl = forCommand()
+    	{cl.insert(newCl}
 }
 
 Expression semanticAnalizer(): {Expression expression = new Expression(); Item item = null; Token token = null; }
@@ -296,19 +316,11 @@ void checkLastElement(Expression expression) {Token token = null; Token secondTo
         item = new Item( Tipo.NUMBER, token.image );
     }
     expression.addItem(item);
-
-    if (expression.getDataType() == null) { 
-      expression.setDataType(Type.NUMBER);
-    }
-    
   }
 
   | t = < STRING >
   {
     expression.addItem(new Item(Type.STRING, token.image));   
-    if (expression.getDataType() == null) { 
-            expression.setDataType(Type.STRING);
-    }
   }
 
   | t = < VAR >
@@ -318,9 +330,6 @@ void checkLastElement(Expression expression) {Token token = null; Token secondTo
     if(!record.exists(token.image)) {
 		semanticError("Variable" + token.image + " not initialized!");
     } else {
-		if (expression.getDataType() == null) { 
-            expression.setDataType(record.getSymbolType() == 'n'? Type.NUMBER : Type.STRING);
-    	}
     	record.setUsed(token.image);
     }
   }
@@ -330,10 +339,120 @@ void checkLastElement(Expression expression) {Token token = null; Token secondTo
     auxiliarExpression(expression)
     try
     {
+      token = < PARR >
     } catch(ParseException e) {
         sintaticError("Close parentheses",PTVIRG);
     }
   }
     
-  }          
+  }
+  /*
+ * From this point onwards the ends, we'll make the semantic analysis for all the different
+ * expression types, such as all the different control and other hu3lang built-in function.
+ * It's the last bastion of the compiler, the semantic analysys, where we'll check if the
+ * expressions constructions do really make sense for the language.
+ */
+void declaration() : { Symbol simb; Token token = null; char type }
+{
+  (< TYPENUM > {type = 'n';} | < TYPESTRING > {type = 's';})
+  token = < VAR >
+  {
+    if(!record.exists(token.image)) {
+		symbol = new Symbol(t.image).
+		symbol.setType(type);
+		symbol.serReference(type);
+		record.include(symbol);
+    } else {
+		semanticError("Variable " + t.image +" already initializated!");
+    }  }
+
+  (
+    < COMMA >
+    token = < VAR >
+	  {
+	    if(!record.exists(token.image)) {
+			symbol = new Symbol(t.image).
+			symbol.setType(type);
+			symbol.serReference(type);
+			record.include(symbol);
+	    } else {
+			semanticError("Variable " + t.image +" already initializated!");
+	  	}
+	  }  )*
+
+  try
+  {
+    < DOTCOMMA >  }
+  catch(ParseException e)
+  {
+	sintaticError("Missing ';' !!!");
+  }}
+
+CommandList show() {Token token; CommandList cl;}
+{
+  < SHOW >
+  (
+    token = < STRING >
+    { cl.insert(new Show(Type.STRING, token.image)); }
+
+    | token = < NUMBER >
+    { cl.insert(new Show(Type.NUMBER, token.image)); }
+
+    | token = < VARNAME >
+    {
+      if(record.exists(token.image)) {
+		semanticError("Variable ", token.image, " not initialized!");
+		return null;
+      } else {
+		record.setUtilized(t.image);
+      }
+      
+      cl.insert(new Show(Type.VAR, token.image));
+    }   )
+  < COMMA >
+  (
+    token = < STRING >
+    { cl.insert(new Show(Type.STRING, token.image)); }
+
+    | token = < NUMBER >
+    { cl.insert(new Show(Type.NUMBER, token.image)); }
+
+    | token = < VARNAME >
+    {
+      if(record.exists(token.image)) {
+		semanticError("Variable ", token.image, " not initialized!");
+		return null;
+      } else {
+		record.setUtilized(t.image);
+      }
+      
+      cl.insert(new Show(Type.VAR, token.image));
+    }   )*
+
+  try
+  {
+    < DOTCOMMA >
+  }
+  catch(ParseException e)
+  {
+	sintaticError("Missing ';' !!!");
+  }
+  return cl;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      
 }
